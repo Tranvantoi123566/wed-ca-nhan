@@ -1,0 +1,163 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LiÃªn QuÃ¢n 3D - Arena of Valor HTML5</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js 3D Engine (Cháº¡y Offline 100%) -->
+    <script src="three.min.js"></script>
+    <script>
+        if (typeof THREE === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+        }
+    </script>
+</head>
+<body>
+    <!-- 3D WebGL Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay Layer -->
+    <div id="ui-layer">
+        
+        <!-- Top Scoreboard Bar -->
+        <div id="top-bar">
+            <div class="score-team blue-team">
+                <span>ðŸ›¡ï¸</span>
+                <span id="blue-kills">0</span>
+            </div>
+            <div id="game-timer">00:00</div>
+            <div id="kda-score">0/0/0</div>
+            <div class="score-team red-team">
+                <span id="red-kills">0</span>
+                <span>âš”ï¸</span>
+            </div>
+        </div>
+
+        <!-- Minimap Radar (GÃ³c trÃªn trÃ¡i) -->
+        <div id="minimap-container">
+            <canvas id="minimap-canvas"></canvas>
+        </div>
+
+        <!-- Quick Buy Item (Äá» cá»­ trang bá»‹ nhanh) -->
+        <div id="quick-buy-box" class="clickable">
+            <div id="quick-item-icon" class="item-icon">ðŸ‘¢</div>
+            <div class="item-info">
+                <span id="quick-item-name" class="item-name">GiÃ y KiÃªn CÆ°á»ng</span>
+                <span id="quick-item-cost" class="item-cost">690 VÃ ng</span>
+            </div>
+            <button id="quick-buy-btn" class="buy-btn clickable">MUA</button>
+        </div>
+
+        <!-- Floating Combat Text Layer -->
+        <div id="combat-text-layer"></div>
+
+        <!-- Announcement Banner (Chiáº¿n cÃ´ng Ä‘áº§u, Háº¡ gá»¥c...) -->
+        <div id="announcer-banner">CHIáº¾N CÃ”NG Äáº¦U!</div>
+
+        <!-- Virtual Joystick (DÃ nh cho Mobile/Cáº£m á»©ng & Chuá»™t) -->
+        <div id="joystick-zone">
+            <div id="joystick-knob"></div>
+        </div>
+
+        <!-- Bottom Hero HUD (MÃ¡u, Mana, Chá»‰ sá»‘) -->
+        <div id="bottom-hud">
+            <div id="hero-bars">
+                <div class="bar-wrapper">
+                    <div id="hp-fill"></div>
+                    <span id="hp-text" class="bar-text">3200 / 3200</span>
+                </div>
+                <div class="bar-wrapper">
+                    <div id="mana-fill"></div>
+                    <span id="mana-text" class="bar-text">400 / 400</span>
+                </div>
+            </div>
+            <div id="hero-info-sub">
+                <span>Cáº¥p: <span id="stat-level" class="level-badge">1</span></span>
+                <span>ðŸ’° <span id="stat-gold">500</span></span>
+                <span>âš”ï¸ <span id="stat-ad">180</span></span>
+                <span>ðŸ›¡ï¸ <span id="stat-armor">65</span></span>
+            </div>
+        </div>
+
+        <!-- Skills Cluster (Cá»¥m chiÃªu thá»©c gÃ³c dÆ°á»›i pháº£i) -->
+        <div id="skills-cluster">
+            <!-- ÄÃ²n Ä‘Ã¡nh thÆ°á»ng -->
+            <button id="btn-attack" class="clickable" title="ÄÃ¡nh thÆ°á»ng (Space / PhÃ­m A)">
+                <span style="font-size: 26px;">âš”ï¸</span>
+                <span style="font-size: 10px;">ÄÃNH</span>
+            </button>
+
+            <!-- ChiÃªu 1: Long Huyáº¿t -->
+            <button id="btn-skill-1" class="skill-btn clickable" title="ChiÃªu 1: Long Huyáº¿t (PhÃ­m Q)">
+                <span class="skill-name">ChiÃªu 1</span>
+                <span class="skill-hotkey">[Q]</span>
+                <div id="cd-skill-1" class="cd-overlay">0</div>
+            </button>
+
+            <!-- ChiÃªu 2: Long Pháº«n -->
+            <button id="btn-skill-2" class="skill-btn clickable" title="ChiÃªu 2: Long Pháº«n (PhÃ­m W)">
+                <span class="skill-name">ChiÃªu 2</span>
+                <span class="skill-hotkey">[W]</span>
+                <div id="cd-skill-2" class="cd-overlay">0</div>
+            </button>
+
+            <!-- ChiÃªu 3 / ChiÃªu cuá»‘i: Long KÃ­ch -->
+            <button id="btn-skill-3" class="skill-btn clickable" title="ChiÃªu cuá»‘i: Long KÃ­ch (PhÃ­m R / E)">
+                <span class="skill-name" style="font-size: 11px; color: #ffeb3b;">ULTI</span>
+                <span class="skill-hotkey">[R]</span>
+                <div id="cd-skill-3" class="cd-overlay">0</div>
+            </button>
+
+            <!-- Bá»• trá»£: Tá»‘c Biáº¿n -->
+            <button id="btn-flash" class="skill-btn clickable" title="Tá»‘c Biáº¿n (PhÃ­m D)">
+                <span style="font-size: 14px;">âš¡</span>
+                <span class="skill-hotkey">[D]</span>
+                <div id="cd-flash" class="cd-overlay">0</div>
+            </button>
+
+            <!-- Biáº¿n Vá» -->
+            <button id="btn-recall" class="skill-btn clickable" title="Biáº¿n Vá» Táº¿ ÄÃ n (PhÃ­m B)">
+                <span style="font-size: 14px;">ðŸŒ€</span>
+                <span class="skill-hotkey">[B]</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Start & Game Over Modal -->
+    <div id="game-modal">
+        <h1 id="modal-title" class="win-title">LIÃŠN QUÃ‚N 3D</h1>
+        <p id="modal-desc">ChÃ o má»«ng Kiá»‡n TÆ°á»›ng bÆ°á»›c vÃ o chiáº¿n trÆ°á»ng 3D LiÃªn QuÃ¢n Ä‘á»‰nh cao! HÃ£y Ä‘iá»u khiá»ƒn Triá»‡u VÃ¢n, farm lÃ­nh, háº¡ gá»¥c Lá»¯ Bá»‘ vÃ  cÃ´ng phÃ¡ NhÃ  ChÃ­nh Ä‘á»‹ch Ä‘á»ƒ giÃ nh chiáº¿n tháº¯ng!</p>
+        
+        <div class="guide-box">
+            <b>🎮 Hướng dẫn điều khiển trên PC:</b><br>
+            • Di chuyển: <b>W, A, S, D</b> hoặc <b>Click chuột trái</b> trên bản đồ.<br>
+            • Đánh thường: Phím <b>Space</b> hoặc <b>G</b>, hoặc Click nút [ĐÁNH].<br>
+            • Chiêu 1 - Long Huyết (Lướt kiếm): Phím <b>Q</b>.<br>
+            • Chiêu 2 - Long Phẫn (Xoay giáo 360°): Phím <b>E</b>.<br>
+            • Chiêu cuối - Long Kích (Giáng sấm sét): Phím <b>R</b>.<br>
+            • Tốc biến (Flash): Phím <b>F</b> | Biến về: Phím <b>B</b>.<br>
+            • Quái Rừng (Bùa Đỏ) ở mép bản đồ: Tiêu diệt nhận tăng sát thương!<br>
+            • Hỗ trợ chạm/kéo Joystick và bấm trực tiếp trên màn hình cảm ứng!
+        </div>
+
+        <button id="start-btn" class="primary-btn clickable" onclick="startGame()">VÃ€O TRáº¬N NGAY</button>
+    </div>
+
+    <script src="sound.js"></script>
+    <script src="game.js"></script>
+
+    <script>
+        function startGame() {
+            if (window.sounds) {
+                window.sounds.resume();
+                window.sounds.playFanfare(true);
+                window.sounds.announce("ChÃ o má»«ng Ä‘áº¿n vá»›i LiÃªn QuÃ¢n Mobile!");
+            }
+            document.getElementById('game-modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
+
